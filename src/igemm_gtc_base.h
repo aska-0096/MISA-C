@@ -51,6 +51,7 @@ using float16 = int16_t;
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_MAC              "mac"
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_DLOPS            "dlops"
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_XDLOPS           "xdlops"
+#define IGEMM_GTC_TUNABLE_FMA_TYPE_WMMA             "wmma"
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_NA               "fma_na"
 #define AMDGPU_WAVE_SIZE        64
 
@@ -91,6 +92,10 @@ typedef enum {
 } driver_mode_t;
 
 typedef struct {
+    igemm_gtc_tunable_t(){
+        /* config processor */
+
+    }
     std::string tensor_layout;
     int gemm_m_per_block;
     int gemm_n_per_block;
@@ -144,6 +149,10 @@ typedef struct {
     int gemm_k_global_split;
     int merge_e;
     int vector_c;
+// reuse this part
+// add processor 
+    bool fma_interleave;
+    int coalescing_store_groups;
 } igemm_gtc_tunable_t;
 
 static inline std::string get_igemm_gtc_fma_type(std::string arch_string, const config_section_t &sec){

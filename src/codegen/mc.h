@@ -42,6 +42,7 @@ private:
     std::function<void()> enter_func;
     std::function<void()> exit_func;
 };
+
 class _mc_indent_t{
 public:
     _mc_indent_t(const int& indent_size_per_level_,
@@ -200,10 +201,68 @@ public:
         return indent.get();
     }
 
+    _mc_indent_t indent;
 private:    
     std::string file_name;
     std::ofstream* current_file;
+};
+
+class mc_deferred_emit_t{
+    /* @brief print to string buffer and manage indent */
+public:    
+    mc_deferred_emit_t(const mc_emit_to_file_t& upper_emitter)
+    :indent(upper_emitter.indent), buffer(""), is_first_line(true){}
+    void emit(const string& instruction){
+        if(is_first_line){
+            buffer += instruction;
+            is_first_line =false;
+        }
+        else{
+            buffer += "\n" + self.indent() + instruction;
+        }
+    }
+
+    void open(){}
+    void close(){}
+    void inc_indent(){
+        indent.inc();
+    }
+
+    void dec_indent(){
+        indent.dec();
+    }
+
+    void set_indent(const int level){
+        indent.set(level);
+    }
+
+    int get_indent(){
+        return indent.get();
+    }
+
+    std::string get_buffer(){
+        return buffer;
+    }
+private:
     _mc_indent_t indent;
+    std::string buffer;
+    bool is_first_line;
+};
+
+class deferred_context_t{
+public:
+    deferred_context_t(const mc_asm_printer_t& outter_) 
+    : outter(outter_), original_emitter(outter_.emitter), deferred_emitter(mc_deferred_emit_t(original_emitter)){
+        outter.emitter = deferred_emitter;
+    }
+    ~deferred_context_t(){
+        outter.emitter = original_emitter;
+        outter.deferred_buffer = deferred_emitter.get_buffer();
+    }
+private:
+    mc_asm_printer_t outter;
+    mc_emit_to_file_t original_emitter;
+    mc_deferred_emit_t deferred_emitter;
 };
 
 class mc_asm_printer_t{
@@ -217,6 +276,10 @@ public:
     }
 
     ~mc_asm_printer_t(){
+        emitter.close();
+    }
+
+    void close(){
         emitter.close();
     }
 
@@ -245,11 +308,6 @@ public:
         emitter.set_indent(indent_level);
     }
 
-    _mc_indent_context_manager_t indent_context(const std::function<void()> &enter_func=NULL,
-                                                const std::function<void()> &exit_func=NULL){
-        return emitter.indent_context(enter_func, exit_func);
-    }
-
     _mc_indent_context_manager_t emit_macro_indented(const std::string& macro_define_str){
         void macro_enter(){
             emit("macro_define_str");
@@ -261,12 +319,44 @@ public:
         return indent_context(macro_enter, macro_exit);
     }
 
-    void emit_macro_desc()
+    //IDLE defined not used
+    // template<typename... Args>
+    // void emit_macro_desc(Args... arg){
+    // }
+    void emit_front(const std::string& instruction){
+        int indent_level = emitter.get_indent();
+        emitter.set_indent(0);
+        emitter.emit(instruction);
+        emitter.set_indent(indent_level);
+    }
 
+    void inc_indent(){
+        emitter.inc_indent();
+    }
 
+    void dec_indent(){
+        emitter.dec_indent();
+    }
 
-private:
+    _mc_indent_context_manager_t indent_context(const std::function<void()> &enter_func=NULL,
+                                                const std::function<void()> &exit_func=NULL){
+        return emitter.indent_context(enter_func, exit_func);
+    }
+
+    deferred_context_t deferred_context(){
+        return deferred_context_t(*this);
+    }
+
+    std::string get_deferred(){
+        return deferred_buffer;
+    }
+
+    void inject(){
+        
+    }
+    
     mc_emit_to_file_t emitter;
+private:
     amdgpu_arch_config_t arch_config;
     std::string deferred_buffer = "";
     std::unordered_map<std::string, macro_base_t> unique_emitter_dict;

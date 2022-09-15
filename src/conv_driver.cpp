@@ -77,21 +77,35 @@
 #include "igemm_fwd_gtc_driver.h"
 #include "igemm_bwd_gtc_driver.h"
 #include "igemm_wrw_gtc_driver.h"
-
-
+#include "igemm_gtc_codegen_driver.h"
+// @return *.hsaco, codeobject
 char* igemm_gtc_codegen(args_t inputflags, config_content_t content){
+    // mc_emit_to_file_t emitter{asm_target};
+    // amdgpu_arch_config_t arch{ std::unordered_map<std::string, int>{
+    //                            {"arch", amdgpu_string_to_arch( sec_root['arch'] )},
+    //                            {"data_type", AMDGPU_PRECISION_FP32},
+    //                            {"code_object", amdgpu_string_to_codeobj( sec_root['code_object'])} };
+    // mc_asm_printer_t mc{emitter, arch};
+    // mc_set_current(mc);
     std::string asm_target = inputflags.get_str("dir") + inputflags.get_str("input_file") + ".s";
-    mc_emit_to_file_t emitter{asm_target};
+    std::ofstream file(asm_target);
     config_section_t sec_root = content.get_section("codegen");
+    std::vector<igemm_gtc_tunable_t> tunables = igemm_gtc_tunable_from_config(content);
+    gxco::target_info_t target{amdgpu_string_to_arch( sec_root['arch'] )};
+    gxco::emit_llvm_hsa_t emitter{file, amdgpu_string_to_codeobj( sec_root['code_object'])};
+    // TODO Part1 Ask GKG(generic kernel generator) to create a SKI(specific kernel instance) 
+    gxco::generator_t kernel = igemm_kernel_gen(tunables, target, emitter);
+    /* 
+    Part2 Emit kernel code 
+    emitter.emit_variable(kernel);
+    emitter.emit_kernel_code(kernel);
+    std::stringstream ss;
+    emitter.emit_metadata_per_kernel_to_buf(kernel, ss);
+    emitter.emit_metadata_from_buf(ss);
 
-    amdgpu_arch_config_t arch{ std::unordered_map<std::string, int>{
-                               {"arch", amdgpu_string_to_arch( sec_root['arch'] )},
-                               {"data_type", AMDGPU_PRECISION_FP32},
-                               {"code_object", amdgpu_string_to_codeobj( sec_root['code_object'])} };
-    mc_asm_printer_t mc{emitter, arch};
-    mc_set_current(mc);
-    auto tunables = igemm_gtc_tunable_from_config(content);
-
+    TODO Part3 Compile
+    compile(ss);  
+    */
 }
 static inline double theoritical_gflops(double sclk_ghz, size_t cu,
                                              size_t simd) {

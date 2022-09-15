@@ -61,15 +61,15 @@ amdgpu_arch_t amdgpu_string_to_arch(const std::string &amdgpu_arch_string){
     if (amdgpu_arch_string == "gfx900")
         return AMDGPU_ARCH_GFX900;
     if (amdgpu_arch_string == "gfx906")
-        return AMDGPU_ARCH_GFX906;
+        return gxco::GFX906;
     if (amdgpu_arch_string == "gfx908")
-        return AMDGPU_ARCH_GFX908;
+        return gxco::GFX908;
     if (amdgpu_arch_string == "gfx90a")
-        return AMDGPU_ARCH_GFX90A;
+        return gxco::GFX90A;
     if (amdgpu_arch_string == "gfx1030")
-        return AMDGPU_ARCH_GFX1030;
+        return gxco::GFX1030;
     if (amdgpu_arch_string == "gfx1100")
-        return AMDGPU_ARCH_GFX1100;
+        return gxco::GFX1100;
     return AMDGPU_ARCH_UNKNOWN;
 }
 
@@ -77,7 +77,7 @@ amdgpu_codeobj_t amdgpu_string_to_codeobj(const std::string &amdgpu_codeobj_stri
     if(amdgpu_codeobj_string == "cov2")
         return AMDGPU_CODEOBJECT_V2;
     if(amdgpu_codeobj_string == "cov3")
-        return AMDGPU_CODEOBJECT_V3;
+        return gxco::HSA_CODE_OBJECT_V3;
     return AMDGPU_CODEOBJECT_UNKNOWN;
 }
 
