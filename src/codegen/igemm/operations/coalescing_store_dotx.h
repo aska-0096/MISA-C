@@ -1,3 +1,7 @@
+#include <string>
+#include <cassert>
+#include "dotx_mapping.h"
+
 struct ctrl_coalescing_store_dotx_t{
     ctrl_dotx_mapping_t cdm;                    // ctrl_dotx_mapping_t
     int coalescing_groups = 1;
@@ -18,4 +22,18 @@ struct ctrl_coalescing_store_dotx_t{
     // mul_vi_func = None
     // mul_si_func = None
 };
-struct igemm_coalescing_store_dotx_t{};
+struct igemm_coalescing_store_dotx_t{
+
+    bool need_vector_m_inside_fold_m(){
+        if (ctrl.vector_fold_m != 1)
+            if (ctrl.vector_fold_m > ctrl.vector_store_m)
+            {
+                assert(ctrl.vector_fold_m % ctrl.vector_store_m == 0);
+                if (ctrl.cdm.block_size() >= ctrl.cdm.macro_tile_n)
+                    return true;
+            }
+        return false;
+    }
+
+    ctrl_coalescing_store_dotx_t ctrl;
+};
