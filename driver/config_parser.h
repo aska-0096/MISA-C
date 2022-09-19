@@ -42,7 +42,7 @@ static inline std::string &sltrim(std::string &s) {
     size_t startpos = s.find_first_not_of(" \t\r\n\v\f");
     if (std::string::npos != startpos) {
         s = s.substr(startpos);
-    }else{
+    } else {
         s = "";
     }
     return s;
@@ -52,7 +52,7 @@ static inline std::string &srtrim(std::string &s) {
     size_t endpos = s.find_last_not_of(" \t\r\n\v\f");
     if (std::string::npos != endpos) {
         s = s.substr(0, endpos + 1);
-    }else{
+    } else {
         s = "";
     }
     return s;
@@ -60,10 +60,9 @@ static inline std::string &srtrim(std::string &s) {
 
 static inline std::string &strim(std::string &s) { return sltrim(srtrim(s)); }
 
-static inline std::string remove_trailing_comment(std::string & s)
-{
+static inline std::string remove_trailing_comment(std::string &s) {
     size_t pos = s.find_first_of(";#");
-    if(std::string::npos != pos) {
+    if (std::string::npos != pos) {
         s = s.erase(pos, std::string::npos);
     }
     return s;
@@ -161,7 +160,7 @@ struct section_meta_value_t<
         range_index.resize(range_index_length);
         for (int i = 0; i < range_index_length; i++) {
             int res;
-            memcpy(&res, buffer.data()+ 4 * i, 4);
+            memcpy(&res, buffer.data() + 4 * i, 4);
             range_index[i] = res;
         }
         return range_index;
@@ -223,7 +222,7 @@ struct section_meta_value_t<
         list_value.resize(buffer.size() / 4);
         for (int i = 0; i < (int)(buffer.size() / 4); i++) {
             int res;
-            memcpy(&res, buffer.data()+ 4 * i, 4);
+            memcpy(&res, buffer.data() + 4 * i, 4);
             list_value[i] = res;
         }
         return list_value;
@@ -341,7 +340,7 @@ struct section_meta_value_t<
         value_string.resize(buffer.size());
         for (int i = 0; i < (int)buffer.size(); i++)
             value_string[i] = static_cast<const char>(buffer[i]);
-        //value_string.back() = '\0';
+        // value_string.back() = '\0';
         return value_string;
     }
     static void encode(std::vector<uint8_t> &buffer, std::string value) {
@@ -351,7 +350,7 @@ struct section_meta_value_t<
         for (int i = 0; i < (int)v.size(); i++) {
             buffer[i] = static_cast<uint8_t>(v[i]);
         }
-        //buffer.back() = static_cast<uint8_t>('\0');
+        // buffer.back() = static_cast<uint8_t>('\0');
     }
     static std::string serialize(const std::vector<uint8_t> &buffer) {
         return std::string("\'") + decode(buffer) + std::string("\'");
@@ -414,9 +413,7 @@ class config_section_value_t {
         this->value_buffer = other.value_buffer;
         return *this;
     }
-    config_section_value_type_enum get_type() const {
-        return this->value_type;
-    }
+    config_section_value_type_enum get_type() const { return this->value_type; }
 
     static bool is_value_int(std::string v) {
         try {
@@ -647,8 +644,8 @@ class config_content_t {
     }
     config_section_t get_section(std::string sec_name) const {
         // return first section with name 'sec_name'
-        for(auto &sec : sections){
-            if(sec.get_name() == sec_name)
+        for (auto &sec : sections) {
+            if (sec.get_name() == sec_name)
                 return sec;
         }
         return config_section_t("sec_na");
@@ -679,9 +676,9 @@ class config_content_t {
 };
 
 /*
-* config file need to be in unix format.
-* If parse fail and have strange behavior, consider run 'dos2unix'
-*/
+ * config file need to be in unix format.
+ * If parse fail and have strange behavior, consider run 'dos2unix'
+ */
 class config_parser_t {
   public:
     config_parser_t(std::string config_file_) : config_file(config_file_) {}

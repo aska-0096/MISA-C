@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,11 +26,11 @@
 #ifndef __PERF_H
 #define __PERF_H
 
-#include "common.h"
 #include "args.h"
+#include "common.h"
 #include "igemm_gtc_base.h"
 
-void gmap_dump(const args_t *conv_args, const igemm_gtc_tunable_t * tunable, int gks);
-
+void gmap_dump(const args_t *conv_args, const igemm_gtc_tunable_t *tunable,
+               int gks);
 
 #endif

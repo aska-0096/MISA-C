@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -28,23 +28,22 @@
 
 // implement convolution pre tiled in h-w
 static inline size_t naive_tiled_conv_out_size(size_t in_size, size_t pad,
-                                         size_t dilation, size_t ksize,
-                                         size_t stride) {
+                                               size_t dilation, size_t ksize,
+                                               size_t stride) {
     return (in_size + 2 * pad - dilation * (ksize - 1) - 1) / stride + 1;
 }
 
-template<typename p_src_t, typename p_dst_t, typename tiled_conv_func_t>
-void naive_2d_tiled_conv_iterator(
-    p_src_t src, p_dst_t dst,
-    size_t i_tile_h, size_t i_tile_w, size_t tile_h, size_t tile_w,
-    size_t w, size_t h, size_t fx, size_t fy, size_t px, size_t py,
-    size_t sx, size_t sy, size_t dx, size_t dy,
-    tiled_conv_func_t tiled_conv)
-{
+template <typename p_src_t, typename p_dst_t, typename tiled_conv_func_t>
+void naive_2d_tiled_conv_iterator(p_src_t src, p_dst_t dst, size_t i_tile_h,
+                                  size_t i_tile_w, size_t tile_h, size_t tile_w,
+                                  size_t w, size_t h, size_t fx, size_t fy,
+                                  size_t px, size_t py, size_t sx, size_t sy,
+                                  size_t dx, size_t dy,
+                                  tiled_conv_func_t tiled_conv) {
     // 2d spatial-tile iterator. each tile is a spatial-slice(sps),
-    // since each spatial-slice size (h/w) may actually different from tile size,
-    // because of original conv padding.
-    // This iterator is responsible for calculating each sec size, and padding of each sec
+    // since each spatial-slice size (h/w) may actually different from tile
+    // size, because of original conv padding. This iterator is responsible for
+    // calculating each sec size, and padding of each sec
     // ... to alow each tile becomea an independent conv, with h/w strided
     size_t ho = naive_tiled_conv_out_size(h, py, dy, fy, sy);
     size_t wo = naive_tiled_conv_out_size(w, px, dx, fx, sx);
@@ -70,49 +69,51 @@ void naive_2d_tiled_conv_iterator(
     size_t tmp_sps_end_hi = sps_hi + i_thi;
     size_t tmp_sps_end_wi = sps_wi + i_twi;
 
-    size_t sps_py = 0;  // left pad for each sec
-    size_t sps_px = 0;  // left pad for each sec
+    size_t sps_py = 0; // left pad for each sec
+    size_t sps_px = 0; // left pad for each sec
 
     // modify input spatial-slice size according to left pad
-    if(tmp_sps_end_hi < sps_hi){
+    if (tmp_sps_end_hi < sps_hi) {
         sps_py = sps_hi - tmp_sps_end_hi;
         sps_hi = tmp_sps_end_hi;
     }
 
-    if(tmp_sps_end_wi < sps_wi){
+    if (tmp_sps_end_wi < sps_wi) {
         sps_px = sps_wi - tmp_sps_end_wi;
         sps_wi = tmp_sps_end_wi;
     }
 
     // modify input spatial-slice size according to right pad
-    if(tmp_sps_end_hi > h)
+    if (tmp_sps_end_hi > h)
         sps_hi -= tmp_sps_end_hi - h;
 
-    if(tmp_sps_end_wi > w)
+    if (tmp_sps_end_wi > w)
         sps_wi -= tmp_sps_end_wi - w;
 
     // tile index should start from 0
-    if(i_thi < 0 || i_thi >= h)
+    if (i_thi < 0 || i_thi >= h)
         i_thi = 0;
-    if(i_twi < 0 || i_twi >= w)
+    if (i_twi < 0 || i_twi >= w)
         i_twi = 0;
 
-    // printf("tile_h:%lu, tile_w:%lu, sps_hi:%lu, sps_wi:%lu, sps_ho:%lu, sps_wo:%lu\n", tile_h, tile_w, sps_hi, sps_wi, sps_ho, sps_wo); fflush(stdout);
+    // printf("tile_h:%lu, tile_w:%lu, sps_hi:%lu, sps_wi:%lu, sps_ho:%lu,
+    // sps_wo:%lu\n", tile_h, tile_w, sps_hi, sps_wi, sps_ho, sps_wo);
+    // fflush(stdout);
 
     // accumulate offset of each tile, and parse to tiled_conv
     p_src_t tile_src = src + i_thi * w + i_twi;
     p_dst_t tile_dst = dst + i_tho * wo + i_two;
 
-    tiled_conv(tile_src, tile_dst, sps_hi, sps_wi, sps_ho, sps_wo, sps_py, sps_px);
+    tiled_conv(tile_src, tile_dst, sps_hi, sps_wi, sps_ho, sps_wo, sps_py,
+               sps_px);
 }
 
-static inline void naive_tiled_conv_fwd_nchw(const float *src, const float *filter,
-                                       float *dst, size_t n, size_t w, size_t h,
-                                       size_t c, size_t k, size_t fx, size_t fy,
-                                       size_t px, size_t py, size_t sx, size_t sy,
-                                       size_t dx, size_t dy, size_t group,
-                                       size_t tx, size_t ty)
-{
+static inline void
+naive_tiled_conv_fwd_nchw(const float *src, const float *filter, float *dst,
+                          size_t n, size_t w, size_t h, size_t c, size_t k,
+                          size_t fx, size_t fy, size_t px, size_t py, size_t sx,
+                          size_t sy, size_t dx, size_t dy, size_t group,
+                          size_t tx, size_t ty) {
     // tx, ty is used to tile output h, w
     size_t ho = naive_tiled_conv_out_size(h, py, dy, fy, sy);
     size_t wo = naive_tiled_conv_out_size(w, px, dx, fx, sx);
@@ -124,30 +125,41 @@ static inline void naive_tiled_conv_fwd_nchw(const float *src, const float *filt
     size_t tiles_w = (wo + tx - 1) / tx;
     size_t tiles_h = (ho + ty - 1) / ty;
 
-    auto tiled_conv = [&](const float * tile_src, float * tile_dst,
-                    size_t sps_hi, size_t sps_wi, size_t sps_ho, size_t sps_wo,
-                    size_t sps_py, size_t sps_px){
+    auto tiled_conv = [&](const float *tile_src, float *tile_dst, size_t sps_hi,
+                          size_t sps_wi, size_t sps_ho, size_t sps_wo,
+                          size_t sps_py, size_t sps_px) {
         for (size_t ig = 0; ig < group; ig++) {
             for (size_t in = 0; in < n; in++) {
                 for (size_t ik = 0; ik < k_per_group; ik++) {
                     for (size_t i_sho = 0; i_sho < sps_ho; i_sho++) {
                         for (size_t i_swo = 0; i_swo < sps_wo; i_swo++) {
                             double value = .0f;
-                            size_t o_idx = in * k * ho * wo + ig * k_per_group * ho * wo + ik * ho * wo + i_sho * wo + i_swo;
+                            size_t o_idx = in * k * ho * wo +
+                                           ig * k_per_group * ho * wo +
+                                           ik * ho * wo + i_sho * wo + i_swo;
                             for (size_t ic = 0; ic < c_per_group; ic++) {
                                 for (size_t ir = 0; ir < fy; ir++) {
-                                    size_t i_shi = sy * i_sho - sps_py + dy * ir;
+                                    size_t i_shi =
+                                        sy * i_sho - sps_py + dy * ir;
                                     if (i_shi < 0 || i_shi >= sps_hi)
                                         continue;
                                     for (size_t is = 0; is < fx; is++) {
-                                        size_t i_swi = sx * i_swo - sps_px + dx * is;
+                                        size_t i_swi =
+                                            sx * i_swo - sps_px + dx * is;
                                         if (i_swi < 0 || i_swi >= sps_wi)
                                             continue;
-                                        size_t i_idx = in * c * h * w + ig * c_per_group * h * w + ic * h * w +
-                                                i_shi * w + i_swi;
-                                        size_t f_idx = ig * k_per_group * c_per_group * fy * fx + ik * c_per_group * fy * fx + ic * fy * fx +
-                                                ir * fx + is;
-                                        value += static_cast<double>(tile_src[i_idx]) * filter[f_idx];
+                                        size_t i_idx =
+                                            in * c * h * w +
+                                            ig * c_per_group * h * w +
+                                            ic * h * w + i_shi * w + i_swi;
+                                        size_t f_idx =
+                                            ig * k_per_group * c_per_group *
+                                                fy * fx +
+                                            ik * c_per_group * fy * fx +
+                                            ic * fy * fx + ir * fx + is;
+                                        value += static_cast<double>(
+                                                     tile_src[i_idx]) *
+                                                 filter[f_idx];
                                     }
                                 }
                             }
@@ -159,14 +171,11 @@ static inline void naive_tiled_conv_fwd_nchw(const float *src, const float *filt
         }
     };
 
-    for(size_t i_tile_h = 0; i_tile_h < tiles_h; i_tile_h++){
-        for(size_t i_tile_w = 0; i_tile_w < tiles_w; i_tile_w++){
-            naive_2d_tiled_conv_iterator(
-                src, dst,
-                i_tile_h, i_tile_w, ty, tx,
-                w, h, fx, fy, px, py,
-                sx, sy, dx, dy,
-                tiled_conv);
+    for (size_t i_tile_h = 0; i_tile_h < tiles_h; i_tile_h++) {
+        for (size_t i_tile_w = 0; i_tile_w < tiles_w; i_tile_w++) {
+            naive_2d_tiled_conv_iterator(src, dst, i_tile_h, i_tile_w, ty, tx,
+                                         w, h, fx, fy, px, py, sx, sy, dx, dy,
+                                         tiled_conv);
         }
     }
 }

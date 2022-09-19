@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -29,32 +29,30 @@
 #include <stddef.h>
 #include <thread>
 
-typedef struct
-{
-    union
-    {
+typedef struct {
+    union {
         int8_t v;
-        struct
-        {
+        struct {
             int lo : 4;
             int hi : 4;
         };
     };
-}int4x2_t;
+} int4x2_t;
 
 template <typename Dst_T, typename Src_T>
-void block_wise_tensor_copy(Dst_T *p_dst, Src_T *p_src, int tid, size_t block_size, size_t total_size)
-{
+void block_wise_tensor_copy(Dst_T *p_dst, Src_T *p_src, int tid,
+                            size_t block_size, size_t total_size) {
     for (int i = tid; i < total_size; i += block_size) {
         p_dst[i] = static_cast<Dst_T>(p_src[i]);
     }
 }
 
 template <>
-void block_wise_tensor_copy<int4x2_t, float>(int4x2_t *p_dst, float *p_src, int tid, size_t block_size, size_t total_size)
-{
+void block_wise_tensor_copy<int4x2_t, float>(int4x2_t *p_dst, float *p_src,
+                                             int tid, size_t block_size,
+                                             size_t total_size) {
     // sizeof(int4x2_t) is 4. So need to find a way to avoid seg fault
-    int8_t *tmp_dst = (int8_t*)(p_dst);
+    int8_t *tmp_dst = (int8_t *)(p_dst);
     for (int i = tid; i < (total_size / 2); i += block_size) {
         int8_t lo = static_cast<int8_t>(p_src[2 * i]);
         int8_t hi = static_cast<int8_t>(p_src[2 * i + 1]);
@@ -76,11 +74,11 @@ void tensor_copy(Dst_T *p_dst, Src_T *p_src, size_t tensor_size) {
     std::vector<std::thread> threads;
     for (int t = 0; t < num_threads; t++) {
         threads.push_back(std::thread(block_wise_tensor_copy<Dst_T, Src_T>,
-            p_dst, p_src, t, num_threads, tensor_size));
+                                      p_dst, p_src, t, num_threads,
+                                      tensor_size));
     }
     for (auto &th : threads)
         th.join();
 }
-
 
 #endif

@@ -29,25 +29,27 @@
 
 #include "gpu_batched_transpose.h"
 
-static inline bool gpu_nchw2nhwc_is_kernel_valid(uint32_t n, uint32_t c, uint32_t h, uint32_t w, const transpose_kernel_param_t * kparam)
-{
+static inline bool
+gpu_nchw2nhwc_is_kernel_valid(uint32_t n, uint32_t c, uint32_t h, uint32_t w,
+                              const transpose_kernel_param_t *kparam) {
     return transpose_kernel_is_valid(n, c, h * w, kparam);
 }
 
-static inline bool gpu_nhwc2nchw_is_kernel_valid(uint32_t n, uint32_t c, uint32_t h, uint32_t w, const transpose_kernel_param_t * kparam)
-{
+static inline bool
+gpu_nhwc2nchw_is_kernel_valid(uint32_t n, uint32_t c, uint32_t h, uint32_t w,
+                              const transpose_kernel_param_t *kparam) {
     return transpose_kernel_is_valid(n, h * w, c, kparam);
 }
 
-template<typename T>
-void gpu_nchw2nhwc(T * dst, T * src, uint32_t n, uint32_t c, uint32_t h, uint32_t w, const transpose_kernel_param_t * kparam)
-{
+template <typename T>
+void gpu_nchw2nhwc(T *dst, T *src, uint32_t n, uint32_t c, uint32_t h,
+                   uint32_t w, const transpose_kernel_param_t *kparam) {
     gpu_batched_transpose(dst, src, n, c, h * w, kparam);
 }
 
-template<typename T>
-void gpu_nhwc2nchw(T * dst, T * src, uint32_t n, uint32_t c, uint32_t h, uint32_t w, const transpose_kernel_param_t * kparam)
-{
+template <typename T>
+void gpu_nhwc2nchw(T *dst, T *src, uint32_t n, uint32_t c, uint32_t h,
+                   uint32_t w, const transpose_kernel_param_t *kparam) {
     gpu_batched_transpose(dst, src, n, h * w, c, kparam);
 }
 #endif

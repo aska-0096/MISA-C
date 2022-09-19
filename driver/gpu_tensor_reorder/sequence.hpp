@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,21 +26,18 @@
 #ifndef SEQUENCE_HPP
 #define SEQUENCE_HPP
 
-template <int... Is>
-struct sequence
-{
+template <int... Is> struct sequence {
     static constexpr int m_size = sizeof...(Is);
 
     __host__ __device__ static constexpr auto size() { return m_size; }
 
     __host__ __device__ static constexpr auto get_size() { return size(); }
 
-    __host__ __device__ static constexpr int at(int I)
-    {
-        // the last dummy element is to prevent compiler complain about empty array, when mSize = 0
+    __host__ __device__ static constexpr int at(int I) {
+        // the last dummy element is to prevent compiler complain about empty
+        // array, when mSize = 0
         const int m_data[m_size + 1] = {Is..., 0};
         return m_data[I];
     }
-
 };
 #endif

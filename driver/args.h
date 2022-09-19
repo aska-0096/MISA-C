@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,6 +26,7 @@
 #ifndef __ARGS_H
 #define __ARGS_H
 
+#include "common.h"
 #include <iomanip>
 #include <iostream>
 #include <stdio.h>
@@ -33,7 +34,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "common.h"
 
 typedef struct {
     std::string long_name;
@@ -159,23 +159,21 @@ class args_t {
 };
 
 static inline std::string create_base_args(int argc, char *argv[]) {
-    if(argc < 2)
-    {
+    if (argc < 2) {
         printf("Invalid Number of Input Arguments\n");
         exit(0);
     }
 
     std::string arg = argv[1];
-    
-    if(find_vector_c_from_base_arg(arg) > 1)   // TODO: not safe
+
+    if (find_vector_c_from_base_arg(arg) > 1) // TODO: not safe
         return arg;
 
-    if(arg != "conv" && arg != "convfp16" && arg != "convint8" && arg != "convint4" && arg != "convbfp16" && arg != "--version")
-    {
+    if (arg != "conv" && arg != "convfp16" && arg != "convint8" &&
+        arg != "convint4" && arg != "convbfp16" && arg != "--version") {
         printf("Invalid Base Input Argument\n");
         exit(0);
-    }
-    else if(arg == "-h" || arg == "--help" || arg == "-?")
+    } else if (arg == "-h" || arg == "--help" || arg == "-?")
         exit(0);
     else
         return arg;
@@ -189,19 +187,23 @@ static inline args_t create_conv_args(int argc, char *argv[]) {
     }
 
     args_t args;
-    args.insert_arg("in_layout", 'I', "NCHW", "Input Layout (Default=NCHW)", "string");
-    args.insert_arg("out_layout", 'O', "NCHW", "Output Layout (Default=NCHW)", "string");
-    args.insert_arg("fil_layout", 'f', "NCHW", "Input Layout (Default=NCHW)", "string");
+    args.insert_arg("in_layout", 'I', "NCHW", "Input Layout (Default=NCHW)",
+                    "string");
+    args.insert_arg("out_layout", 'O', "NCHW", "Output Layout (Default=NCHW)",
+                    "string");
+    args.insert_arg("fil_layout", 'f', "NCHW", "Input Layout (Default=NCHW)",
+                    "string");
     args.insert_arg("spatial_dim", '_', "2",
                     "convolution spatial dimension (Default-2)", "int");
-    args.insert_arg("forw", 'F', "0", "Flag enables fwd, bwd, wrw convolutions"
-                                      "\n0 fwd+bwd+wrw (default)"
-                                      "\n1 fwd only"
-                                      "\n2 bwd only"
-                                      "\n4 wrw only"
-                                      "\n3 fwd+bwd"
-                                      "\n5 fwd+wrw"
-                                      "\n6 bwd+wrw",
+    args.insert_arg("forw", 'F', "0",
+                    "Flag enables fwd, bwd, wrw convolutions"
+                    "\n0 fwd+bwd+wrw (default)"
+                    "\n1 fwd only"
+                    "\n2 bwd only"
+                    "\n4 wrw only"
+                    "\n3 fwd+bwd"
+                    "\n5 fwd+wrw"
+                    "\n6 bwd+wrw",
                     "int");
     args.insert_arg("batchsize", 'n', "100", "Mini-batch size (Default=100)",
                     "int");

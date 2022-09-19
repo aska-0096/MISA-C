@@ -9,4 +9,4 @@
 #include "operations/mapping_param.h"
 #include "operations/shared_memory.h"
 
-#endif  // OPERATIONS_H
+#endif // OPERATIONS_H
