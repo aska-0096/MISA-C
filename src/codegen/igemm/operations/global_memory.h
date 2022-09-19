@@ -1,3 +1,5 @@
+#ifndef GLOBAL_MEMORY_H
+#define GLOBAL_MEMORY_H
 struct ctrl_2d_global_load_t
 {
     int length_d0 = 1;           // if d0 is 1, it is indeed 1d access
@@ -25,3 +27,8 @@ struct ctrl_2d_global_load_t
 class macro_igemm_2d_global_load_t{
 
 };
+
+class igemm_global_load_wei_t{};
+class igemm_global_load_in_t{};
+
+#endif // GLOBAL_MEMORY_H

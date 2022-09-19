@@ -48,6 +48,7 @@ using float16 = int16_t;
 #include <numeric>
 #include "magic_div.h"
 
+#define IGEMM_GTC_FEAT_MAGIC_DIVISION true
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_MAC              "mac"
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_DLOPS            "dlops"
 #define IGEMM_GTC_TUNABLE_FMA_TYPE_XDLOPS           "xdlops"
@@ -92,10 +93,6 @@ typedef enum {
 } driver_mode_t;
 
 typedef struct {
-    igemm_gtc_tunable_t(){
-        /* config processor */
-
-    }
     std::string tensor_layout;
     int gemm_m_per_block;
     int gemm_n_per_block;
@@ -149,10 +146,12 @@ typedef struct {
     int gemm_k_global_split;
     int merge_e;
     int vector_c;
-// reuse this part
-// add processor 
+    // add processor 
     bool fma_interleave;
     int coalescing_store_groups;
+    int block_size;
+    int num_global_load_a;
+    int num_global_load_b;
 } igemm_gtc_tunable_t;
 
 static inline std::string get_igemm_gtc_fma_type(std::string arch_string, const config_section_t &sec){

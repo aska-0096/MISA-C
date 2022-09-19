@@ -1,5 +1,12 @@
+#ifndef DOTX_MAPPING_H
+#define DOTX_MAPPING_H
+
 #include <cassert>
+
+#include "../../gxco/gxco.h"
+#include "dotx.h"
 #define LANEGROUP_SIZE 8
+#define DOTX_USE_VOP3P true
 
 struct ctrl_dotx_mapping_t{
 /*
@@ -57,7 +64,7 @@ struct ctrl_dotx_mapping_t{
                         uint32_t lanegroup_wave_m_,   uint32_t lanegroup_wave_n_, 
                         uint32_t waves_, 
                         uint32_t lanegroup_repeat_m_, uint32_t lanegroup_repeat_n_, 
-                        const instruction_t& inst_dotx_)
+                        const std::string& inst_dotx_)
                     : macro_tile_m(macro_tile_m_), macro_tile_n(macro_tile_m_),
                       lanegroup_tile_m(lanegroup_tile_m_), lanegroup_tile_n(lanegroup_tile_n_),
                       lanegroup_thrd_m(lanegroup_thrd_m_), lanegroup_thrd_n(lanegroup_thrd_n_),
@@ -174,12 +181,41 @@ struct ctrl_dotx_mapping_t{
     uint32_t waves;
     uint32_t lanegroup_repeat_m;
     uint32_t lanegroup_repeat_n;
-    instruction_t inst_dotx;
+    std::string inst_dotx;
 };
 
-ctrl_dotx_mapping_t get_ctrl_dotx_mapping_from_lanegroup_tile(){
-
-
+ctrl_dotx_mapping_t get_ctrl_dotx_mapping_from_lanegroup_tile(){}
+std::string get_dotx_fma_instruction(const gxco::arch_t& arch, const std::string precision){
+    std::string arch_str = amdgpu_arch_to_string(arch);
+    if(arch_str == "gfx1030"){
+        if (precision.substr(0,4) == "fp16"){
+            if (DOTX_USE_VOP3P)
+                return "v_dot2_f32_f16";
+            else
+                return "v_dot2c_f32_f16";
+        }
+        else if (precision.substr(0,4) == "int8"){
+            if (DOTX_USE_VOP3P)
+                return "v_dot4_i32_i8";
+            else
+                return "v_dot4c_i32_i8";
+        }
+        else if (precision.substr(0,4) == "int4")
+            return "v_dot8_i32_i4";
+        else{
+            assert(0);
+            return "No instruction avaliable";
+        }
+    }
+    else{
+        assert(0);
+        return "No instruction avaliable";
+    }
 }
 
-struct igemm_dotx_mapping_t{};
+struct igemm_dotx_mapping_t{
+    igemm_dotx_mapping_t();
+    ctrl_dotx_mapping_t ctrl;
+};
+
+#endif // DOTX_MAPPING_H

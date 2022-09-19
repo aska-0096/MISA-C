@@ -1,3 +1,6 @@
+#ifndef COALESCING_STORE_DOTX_H
+#define COALESCING_STORE_DOTX_H
+
 #include <string>
 #include <cassert>
 #include "dotx_mapping.h"
@@ -23,6 +26,8 @@ struct ctrl_coalescing_store_dotx_t{
     // mul_si_func = None
 };
 struct igemm_coalescing_store_dotx_t{
+    igemm_coalescing_store_dotx_t();
+    igemm_coalescing_store_dotx_t(const ctrl_coalescing_store_dotx_t& ctrl_):ctrl(ctrl_){}
 
     bool need_vector_m_inside_fold_m(){
         if (ctrl.vector_fold_m != 1)
@@ -37,3 +42,5 @@ struct igemm_coalescing_store_dotx_t{
 
     ctrl_coalescing_store_dotx_t ctrl;
 };
+
+#endif // COALESCING_STORE_DOTX_H

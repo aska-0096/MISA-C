@@ -1,0 +1,1 @@
+/opt/rocm/hip/bin/hipcc -std=c++17 -DUSE_MAGIC_DIV=1 -DIGEMM_CONFIG_FILE="/home/haocwang/MISA-C/config/igemm_fwd_gtc_gfx1030_nchwc_fp16x8_vop3p.config" -DIGEMM_HSACO="igemm_fwd_gtc_gfx1030_nchwc_fp16x8_vop3p.hsaco" -Idriver -DUSE_HALF  src/conv_driver.cpp -o out/conv_driver.exe

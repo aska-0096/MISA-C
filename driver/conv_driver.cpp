@@ -37,7 +37,6 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
-#include <unordered_map>
 
 #ifndef USE_EXT_MODULE_LAUNCH
 #define USE_EXT_MODULE_LAUNCH 1
@@ -52,62 +51,31 @@
 #endif
 
 #ifdef USE_GPU_NAIVE_CONV
-#   include "../driver/gpu_naive_conv.h"
+#   include "gpu_naive_conv.h"
 #   ifndef IGEMM_GPU_NAIVE_CONV_HSACO
 #       define  IGEMM_GPU_NAIVE_CONV_HSACO "naive_conv.hsaco"
 #   endif
 #else
 #   define NAIVE_CONV_THREADED
-#   include "../driver/naive_conv.h"
+#   include "naive_conv.h"
 #endif
 
 #ifndef USE_MIOPEN_NRMS
 #define USE_MIOPEN_NRMS 1
 #endif
 
-#include "../driver/common.h"
-#include "../driver/args.h"
-#include "../driver/config_parser.h"
-#include "codegen/amdgpu.h"
-#include "../driver/perf.h"
-#include "../driver/tensor_transpose.h"
-#include "../driver/tensor_copy_cpu.h"
-#include "../driver/tensor_validation_cpu.h"
-#include "../driver/igemm_gtc_base.h"
-#include "../driver/igemm_fwd_gtc_driver.h"
-#include "../driver/igemm_bwd_gtc_driver.h"
-#include "../driver/igemm_wrw_gtc_driver.h"
-#include "igemm_gtc_codegen_driver.h"
-// @return *.hsaco, codeobject
-char* igemm_gtc_codegen(args_t inputflags, config_content_t content){
-    // mc_emit_to_file_t emitter{asm_target};
-    // amdgpu_arch_config_t arch{ std::unordered_map<std::string, int>{
-    //                            {"arch", amdgpu_string_to_arch( sec_root['arch'] )},
-    //                            {"data_type", AMDGPU_PRECISION_FP32},
-    //                            {"code_object", amdgpu_string_to_codeobj( sec_root['code_object'])} };
-    // mc_asm_printer_t mc{emitter, arch};
-    // mc_set_current(mc);
-    std::string asm_target = inputflags.get_str("dir") + inputflags.get_str("input_file") + ".s";
-    std::ofstream file(asm_target);
-    config_section_t sec_root = content.get_section("codegen");
-    std::vector<igemm_gtc_tunable_t> tunables = igemm_gtc_tunable_from_config(content);
-    gxco::target_info_t target{amdgpu_string_to_arch( sec_root['arch'] )};
-    gxco::emit_llvm_hsa_t emitter{file, amdgpu_string_to_codeobj( sec_root['code_object'])};
-    // TODO Part1 Ask GKG(generic kernel generator) to create a SKI(specific kernel instance) 
-    gxco::generator_t kernel = igemm_kernel_gen(tunables, target, emitter);
-    emitter.emit_variable(kernel);
-    /* 
-    Part2 Emit kernel code 
-    emitter.emit_variable(kernel);
-    emitter.emit_kernel_code(kernel);
-    std::stringstream ss;
-    emitter.emit_metadata_per_kernel_to_buf(kernel, ss);
-    emitter.emit_metadata_from_buf(ss);
+#include "common.h"
+#include "args.h"
+#include "config_parser.h"
+#include "perf.h"
+#include "tensor_transpose.h"
+#include "tensor_copy_cpu.h"
+#include "tensor_validation_cpu.h"
+#include "igemm_gtc_base.h"
+#include "igemm_fwd_gtc_driver.h"
+#include "igemm_bwd_gtc_driver.h"
+#include "igemm_wrw_gtc_driver.h"
 
-    TODO Part3 Compile
-    compile(ss);  
-    */
-}
 static inline double theoritical_gflops(double sclk_ghz, size_t cu,
                                              size_t simd) {
     return 2 * sclk_ghz * cu * simd;
@@ -597,10 +565,7 @@ void launch_conv_driver(driver_t * driver, const args_t *conv_args, const std::v
 }
 
 int main(int argc, char **argv) {
-    /* Environment arguments
-     * Codeobject would be generated on the fly
-     * char *hsaco = env_get_str("IGEMM_HSACO", IGEMM_HSACO);
-     */
+    char *hsaco = env_get_str("IGEMM_HSACO", IGEMM_HSACO);
     char *config_file = env_get_str("IGEMM_CONFIG_FILE", IGEMM_CONFIG_FILE);
     std::string run_only_kernel = env_get_str("IGEMM_RUN_ONLY_KERNEL", IGEMM_RUN_ONLY_KERNEL_DEFAULT);
     int warmup = env_get_int("IGEMM_WARMUP", WARMUP);
@@ -632,16 +597,11 @@ int main(int argc, char **argv) {
     }
     // printf("tunables:%d, hsaco:%s\n", tunables.size(), hsaco);
 
-    /* Codegen */
-    args_t inputflags = create_inputflags(argc, argv);
-    char *hsaco = igemm_gtc_codegen(inputflags, content); // -> codegen_driver.py
-
     hipModule_t module;
 #ifndef IGEMM_SPLIT_KERNEL
     HIP_CALL(hipModuleLoad(&module, hsaco));
 #endif
-    
-    /* Compile arguments parsing */
+
     std::string base_arg = create_base_args(argc, argv);
     args_t conv_args = create_conv_args(argc, argv);
     // dump_arg(&conv_args);

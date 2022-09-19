@@ -22,6 +22,7 @@ namespace gxco {
 
 enum arch_t
 {
+    AMDGPU_ARCH_UNKNOWN = 0,
     GFX906  = 906,
     GFX908  = 908,
     GFX90A  = 910,
@@ -148,6 +149,8 @@ enum emitter_type
 
 enum hsa_code_object_version
 {
+    AMDGPU_CODEOBJECT_UNKNOWN, 
+    HSA_CODE_OBJECT_V2,
     HSA_CODE_OBJECT_V3,
     HSA_CODE_OBJECT_V4
 };

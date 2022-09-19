@@ -1,6 +1,7 @@
 #include <string>
 #include <cassert>
 #include <unordered_map>
+#include "gxco/gxco.h"
 typedef enum{
     AMDGPU_PRECISION_UNKNOWN= (1 << 19),
     AMDGPU_PRECISION_FP32   = (0 << 20),
@@ -57,9 +58,9 @@ private:
     std::unordered_map<std::string, int> dict;
 };
 
-amdgpu_arch_t amdgpu_string_to_arch(const std::string &amdgpu_arch_string){
-    if (amdgpu_arch_string == "gfx900")
-        return AMDGPU_ARCH_GFX900;
+gxco::arch_t amdgpu_string_to_arch(const std::string &amdgpu_arch_string){
+    // if (amdgpu_arch_string == "gfx900")
+    //     return AMDGPU_ARCH_GFX900;
     if (amdgpu_arch_string == "gfx906")
         return gxco::GFX906;
     if (amdgpu_arch_string == "gfx908")
@@ -70,26 +71,45 @@ amdgpu_arch_t amdgpu_string_to_arch(const std::string &amdgpu_arch_string){
         return gxco::GFX1030;
     if (amdgpu_arch_string == "gfx1100")
         return gxco::GFX1100;
-    return AMDGPU_ARCH_UNKNOWN;
+    return gxco::AMDGPU_ARCH_UNKNOWN;
 }
 
-amdgpu_codeobj_t amdgpu_string_to_codeobj(const std::string &amdgpu_codeobj_string){
+std::string amdgpu_arch_to_string(const gxco::arch_t &amdgpu_arch){
+    // if (amdgpu_arch_string == "gfx900")
+    //     return AMDGPU_ARCH_GFX900;
+    if (amdgpu_arch == gxco::GFX906)
+        return "gfx906";
+    if (amdgpu_arch == gxco::GFX908)
+        return "gfx908";
+    if (amdgpu_arch == gxco::GFX90A)
+        return "gfx90a";
+    if (amdgpu_arch == gxco::GFX1030)
+        return "gfx1030";
+    if (amdgpu_arch == gxco::GFX1100)
+        return "gfx1100";
+
+    return "AMDGPU_ARCH_UNKNOWN";
+}
+
+gxco::hsa_code_object_version amdgpu_string_to_codeobj(const std::string &amdgpu_codeobj_string){
     if(amdgpu_codeobj_string == "cov2")
-        return AMDGPU_CODEOBJECT_V2;
+        return gxco::HSA_CODE_OBJECT_V2;
     if(amdgpu_codeobj_string == "cov3")
         return gxco::HSA_CODE_OBJECT_V3;
-    return AMDGPU_CODEOBJECT_UNKNOWN;
+    return gxco::AMDGPU_CODEOBJECT_UNKNOWN;
 }
 
-const std::string amdgpu_codeobj_to_string(const amdgpu_codeobj_t &amdgpu_codeobj){
-    if(amdgpu_codeobj == AMDGPU_CODEOBJECT_V2)
+const std::string amdgpu_codeobj_to_string(const gxco::hsa_code_object_version &amdgpu_codeobj){
+    if(amdgpu_codeobj == gxco::HSA_CODE_OBJECT_V2)
         return "cov2";
-    if(amdgpu_codeobj == AMDGPU_CODEOBJECT_V3)
+    if(amdgpu_codeobj == gxco::HSA_CODE_OBJECT_V3)
         return "cov3";
+    if(amdgpu_codeobj == gxco::HSA_CODE_OBJECT_V4)
+        return "cov4";
     return "cov_unknown";
 }
 
-const std::string amdgpu_precision_to_string(const amdgpu_codeobj_t &amdgpu_precision){
+const std::string amdgpu_precision_to_string(const amdgpu_precision_t &amdgpu_precision){
     if (amdgpu_precision == AMDGPU_PRECISION_FP32)
         return "fp32";
     if (amdgpu_precision == AMDGPU_PRECISION_FP16)
@@ -133,7 +153,8 @@ amdgpu_precision_t amdgpu_string_to_precision(const std::string &amdgpu_precisio
     return AMDGPU_PRECISION_UNKNOWN;
 }
 
-float amdgpu_precision_data_byte(const amdgpu_codeobj_t &amdgpu_precision){
+float amdgpu_precision_data_byte(const std::string& amdgpu_precision_str){
+    amdgpu_precision_t amdgpu_precision = amdgpu_string_to_precision(amdgpu_precision_str);
     if(amdgpu_precision == AMDGPU_PRECISION_FP32)
         return 4;
     if(amdgpu_precision == AMDGPU_PRECISION_FP16 || amdgpu_precision == AMDGPU_PRECISION_BF16 )
@@ -360,145 +381,8 @@ class amdgpu_kernel_code_t{
     int wavefront_size;
     int cumode;
 };
-class amdgpu_kernel_code_t(object):
-    '''
-    reuse this for both cov2 and cov3
-    .amd_kernel_code_t
-    	amd_code_version_major = 1
-		amd_code_version_minor = 2
-		amd_machine_kind = 1
-		amd_machine_version_major = 9
-		amd_machine_version_minor = 0
-		amd_machine_version_stepping = 6
-		kernel_code_entry_byte_offset = 256
-		kernel_code_prefetch_byte_size = 0
-		granulated_workitem_vgpr_count = 28
-		granulated_wavefront_sgpr_count = 4
-		priority = 0
-		float_mode = 192
-		priv = 0
-		enable_dx10_clamp = 1
-		debug_mode = 0
-		enable_ieee_mode = 1
-		enable_wgp_mode = 0
-		enable_mem_ordered = 0
-		enable_fwd_progress = 0
-		enable_sgpr_private_segment_wave_byte_offset = 0
-		user_sgpr_count = 6
-		enable_trap_handler = 0
-		enable_sgpr_workgroup_id_x = 1
-		enable_sgpr_workgroup_id_y = 0
-		enable_sgpr_workgroup_id_z = 0
-		enable_sgpr_workgroup_info = 0
-		enable_vgpr_workitem_id = 0
-		enable_exception_msb = 0
-		granulated_lds_size = 0
-		enable_exception = 0
-		enable_sgpr_private_segment_buffer = 1
-		enable_sgpr_dispatch_ptr = 0
-		enable_sgpr_queue_ptr = 0
-		enable_sgpr_kernarg_segment_ptr = 1
-		enable_sgpr_dispatch_id = 0
-		enable_sgpr_flat_scratch_init = 0
-		enable_sgpr_private_segment_size = 0
-		enable_sgpr_grid_workgroup_count_x = 0
-		enable_sgpr_grid_workgroup_count_y = 0
-		enable_sgpr_grid_workgroup_count_z = 0
-		; enable_wavefront_size32 = 0
-		enable_ordered_append_gds = 0
-		private_element_size = 1
-		is_ptr64 = 1
-		is_dynamic_callstack = 0
-		is_debug_enabled = 0
-		is_xnack_enabled = 0
-		workitem_private_segment_byte_size = 0
-		workgroup_group_segment_byte_size = 32768
-		gds_segment_byte_size = 0
-		kernarg_segment_byte_size = 32
-		workgroup_fbarrier_count = 0
-		wavefront_sgpr_count = 35
-		workitem_vgpr_count = 115
-		reserved_vgpr_first = 0
-		reserved_vgpr_count = 0
-		reserved_sgpr_first = 0
-		reserved_sgpr_count = 0
-		debug_wavefront_private_segment_offset_sgpr = 0
-		debug_private_segment_buffer_sgpr = 0
-		kernarg_segment_alignment = 4
-		group_segment_alignment = 4
-		private_segment_alignment = 4
-		wavefront_size = 6
-		call_convention = -1
-		runtime_loader_kernel_symbol = 0
-    .end_amd_kernel_code_t
-    '''
-    def __init__(self, kernel_code_dict):
-        kc = _dict_with_default_t(kernel_code_dict)
-        self.enable_sgpr_private_segment_buffer     = kc('enable_sgpr_private_segment_buffer', 0)
-        self.enable_sgpr_dispatch_ptr               = kc('enable_sgpr_dispatch_ptr', 0)
-        self.enable_sgpr_queue_ptr                  = kc('enable_sgpr_queue_ptr', 0)
-        self.enable_sgpr_kernarg_segment_ptr        = kc('enable_sgpr_kernarg_segment_ptr', 1)
-        self.enable_sgpr_dispatch_id                = kc('enable_sgpr_dispatch_id', 0)
-        # other sgpr related to be implemented
-        self.user_sgpr_count                        = self.cal_user_sgpr_count()
 
-        self.enable_sgpr_workgroup_id_x             = kc('enable_sgpr_workgroup_id_x', 1)
-        self.enable_sgpr_workgroup_id_y             = kc('enable_sgpr_workgroup_id_y', 0)
-        self.enable_sgpr_workgroup_id_z             = kc('enable_sgpr_workgroup_id_z', 0)
-        self.enable_vgpr_workitem_id                = kc('enable_vgpr_workitem_id', 0)
-
-        self.float_mode                             = kc('float_mode', 192)
-
-        self.is_ptr64                               = kc('is_ptr64', 1)
-        self.workgroup_group_segment_byte_size      = kc('workgroup_group_segment_byte_size', 0)
-        self.wavefront_sgpr_count                   = kc('wavefront_sgpr_count', 0)
-        self.workitem_vgpr_count                    = kc('workitem_vgpr_count', 0)
-
-        if type(self.workitem_vgpr_count) is str and self.workitem_vgpr_count == 'v_end':
-            self.granulated_workitem_vgpr_count     = '(v_end-1)/4'
-        else:
-            self.granulated_workitem_vgpr_count     = self.cal_granulated_workitem_vgpr_count()
-
-        # VCC, FLAT_SCRATCH and XNACK must be counted
-        if type(self.wavefront_sgpr_count) is str and self.wavefront_sgpr_count == 's_end+2*3':
-            self.granulated_wavefront_sgpr_count    = '(s_end+2*3-1)/8'
-        else:
-            self.granulated_wavefront_sgpr_count    = self.cal_granulated_wavefront_sgpr_count()
-        self.kernarg_segment_byte_size              = kc('kernarg_segment_byte_size', 0)
-        self.tg_split                               = kc('tg_split', 0)
-        self.accum_offset                           = kc('accum_offset', 0)
-        self.wavefront_size                         = kc('wavefront_size', 64)
-        self.cumode                                 = kc('cumode', 1)   # 0-cu mode, 1-wgp mode. for gfx>10
-
-    def cal_user_sgpr_count(self):
-        count = 0
-        if self.enable_sgpr_private_segment_buffer:
-            count += 4
-        if self.enable_sgpr_dispatch_ptr:
-            count += 2
-        if self.enable_sgpr_queue_ptr:
-            count += 2
-        if self.enable_sgpr_kernarg_segment_ptr:
-            count += 2
-        if self.enable_sgpr_dispatch_id:
-            count += 2
-        # other sgpr related to be implemented
-
-        return count
-
-    def cal_granulated_workitem_vgpr_count(self):
-        '''
-        (workitem_vgpr_count-1)/4
-        note for gfx90a, this value need be (workitem_vgpr_count-1)/8, but since this is used in cov2, so omit here
-        '''
-        return (self.workitem_vgpr_count - 1) // 4
-
-    def cal_granulated_wavefront_sgpr_count(self):
-        '''
-        (wavefront_sgpr_count-1)/8
-        '''
-        return (self.wavefront_sgpr_count - 1) // 8
-
+/*
 class amdgpu_kernel_arg_t(object):
     '''
     http://llvm.org/docs/AMDGPUUsage.html#code-object-v3-metadata-mattr-code-object-v3
@@ -657,3 +541,4 @@ class hsa_footer_t(mc_base_t):
         mc_base_t.__init__(self, mc)
     def emit(self):
         pass
+*/
